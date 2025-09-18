@@ -51,6 +51,17 @@ def create_settings():
         
         # Database URL ni environment dan olish
         database_url = os.getenv('DATABASE_URL')
+        
+        # Railway environment da external database URL ishlatish
+        if os.getenv('RAILWAY_ENVIRONMENT'):
+            # Railway da DATABASE_PUBLIC_URL ishlatamiz (external connection)
+            external_db_url = os.getenv('DATABASE_PUBLIC_URL')
+            if external_db_url:
+                print(f"🚄 Railway: External database URL ishlatilmoqda")
+                database_url = external_db_url
+            elif database_url and 'railway.internal' in database_url:
+                print("⚠️ Railway: Internal URL topildi, lekin external URL yo'q!")
+        
         if not database_url:
             # Default SQLite for local development
             database_url = 'sqlite+aiosqlite:///uykelishuv_new.db'
