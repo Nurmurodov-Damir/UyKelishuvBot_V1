@@ -40,14 +40,26 @@ class Settings(BaseSettings):
 def create_settings():
     """Settings obyektini soddalashtirilgan yaratish"""
     try:
-        # Faqat kerakli o'zgaruvchilarni olish
+        # Bot token olish - Railway da majburiy
         bot_token = os.getenv('TELEGRAM_BOT_TOKEN', '')
         if not bot_token:
-            print("⚠️ TELEGRAM_BOT_TOKEN topilmadi! Test token ishlatilmoqda...")
-            bot_token = '123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ'  # Test token
+            if os.getenv('RAILWAY_ENVIRONMENT'):
+                raise ValueError("TELEGRAM_BOT_TOKEN environment variable kerak Railway da!")
+            else:
+                print("⚠️ TELEGRAM_BOT_TOKEN topilmadi! Test token ishlatilmoqda...")
+                bot_token = '123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ'  # Test token
         
-        # Database URL ni environment dan olish yoki default SQLite
-        database_url = os.getenv('DATABASE_URL', 'sqlite+aiosqlite:///uykelishuv_new.db')
+        # Database URL ni environment dan olish
+        database_url = os.getenv('DATABASE_URL')
+        if not database_url:
+            # Default SQLite for local development
+            database_url = 'sqlite+aiosqlite:///uykelishuv_new.db'
+        elif database_url.startswith('postgresql://'):
+            # PostgreSQL URL ni asyncpg uchun tuzatish
+            database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://')
+        elif database_url.startswith('postgres://'):
+            # postgres:// ni postgresql+asyncpg:// ga o'zgartirish
+            database_url = database_url.replace('postgres://', 'postgresql+asyncpg://')
         
         # Settings yaratish
         data = {

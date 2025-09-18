@@ -16,19 +16,37 @@ def check_requirements():
     """Kerakli fayllarni tekshirish"""
     print("🔍 Kerakli fayllarni tekshirish...")
     
-    # .env faylini tekshirish
-    env_file = project_root / ".env"
-    if not env_file.exists():
-        print("❌ .env fayli topilmadi!")
-        print("📝 .env fayl yarating va kerakli o'zgaruvchilarni qo'shing:")
-        print("""
+    # Railway environment check
+    if os.getenv('RAILWAY_ENVIRONMENT'):
+        print("🚀 Railway muhitida ishlamoqda...")
+        # Railway da environment variables to'g'ridan-to'g'ri o'rnatiladi
+        required_vars = ['TELEGRAM_BOT_TOKEN', 'DATABASE_URL']
+        missing_vars = []
+        
+        for var in required_vars:
+            if not os.getenv(var):
+                missing_vars.append(var)
+        
+        if missing_vars:
+            print(f"❌ Quyidagi environment variables yetishmayapti: {', '.join(missing_vars)}")
+            return False
+        
+        print("✅ Barcha kerakli environment variables mavjud")
+        return True
+    else:
+        # Local development uchun .env fayli kerak
+        env_file = project_root / ".env"
+        if not env_file.exists():
+            print("❌ .env fayli topilmadi!")
+            print("📝 .env fayl yarating va kerakli o'zgaruvchilarni qo'shing:")
+            print("""
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 DATABASE_URL=sqlite:///uykelishuv.db
 SECRET_KEY=your_secret_key_here
 JWT_SECRET_KEY=your_jwt_secret_key
 DEBUG=True
-        """)
-        return False
+            """)
+            return False
     
     # requirements.txt ni tekshirish
     req_file = project_root / "requirements.txt"
