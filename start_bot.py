@@ -74,9 +74,25 @@ def check_dependencies():
         print("pip install -r requirements.txt")
         return False
 
+
 async def start_bot():
     """Bot ni ishga tushirish"""
     print("🚀 UyKelishuv Bot ishga tushmoqda...")
+    
+    # Railway environment diagnostics
+    if os.getenv('RAILWAY_ENVIRONMENT'):
+        print(f"🚄 Railway environment: {os.getenv('RAILWAY_ENVIRONMENT')}")
+        print(f"🔑 Bot token mavjud: {'Ha' if os.getenv('TELEGRAM_BOT_TOKEN') else 'Yo\'q'}")
+        print(f"📊 Database URL: {os.getenv('DATABASE_URL', 'Not set')[:50]}...")
+        
+        # Test database connection
+        try:
+            print("🔍 Database ulanishini tekshirish...")
+            from src.config import settings
+            print(f"📊 Database URL (parsed): {settings.database_url[:50]}...")
+        except Exception as e:
+            print(f"❌ Config yuklashda xatolik: {e}")
+            return
     
     try:
         from src.main import main
@@ -85,15 +101,37 @@ async def start_bot():
         print("\n⏹️ Bot to'xtatildi")
     except Exception as e:
         print(f"❌ Bot ishga tushishda xatolik: {e}")
+        import traceback
+        print(f"🔍 Traceback: {traceback.format_exc()}")
         print("🔧 Xatoliklarni tekshiring va qayta urinib ko'ring")
+        # Railway uchun exit code
+        if os.getenv('RAILWAY_ENVIRONMENT'):
+            raise
 
 def main():
     """Asosiy funksiya"""
     print("🏠 UyKelishuv Bot")
     print("=" * 50)
     
+    # Railway environment info
+    if os.getenv('RAILWAY_ENVIRONMENT'):
+        print(f"🚄 Railway Environment: {os.getenv('RAILWAY_ENVIRONMENT')}")
+        print(f"🐍 Python version: {sys.version}")
+        print(f"📁 Working directory: {os.getcwd()}")
+        print(f"📊 Environment variables:")
+        for key in ['TELEGRAM_BOT_TOKEN', 'DATABASE_URL', 'SECRET_KEY', 'DEBUG', 'ADMIN_IDS']:
+            value = os.getenv(key)
+            if key == 'TELEGRAM_BOT_TOKEN' and value:
+                print(f"  {key}: {'*' * 20}...{value[-10:]}")
+            elif key == 'DATABASE_URL' and value:
+                print(f"  {key}: {value[:30]}...")
+            else:
+                print(f"  {key}: {value}")
+    
     # Kerakli fayllarni tekshirish
     if not check_requirements():
+        if os.getenv('RAILWAY_ENVIRONMENT'):
+            print("❌ Railway environment variables yetishmayapti!")
         sys.exit(1)
     
     # Dependencies ni tekshirish
@@ -105,6 +143,8 @@ def main():
         asyncio.run(start_bot())
     except Exception as e:
         print(f"❌ Umumiy xatolik: {e}")
+        import traceback
+        print(f"🔍 Full traceback: {traceback.format_exc()}")
         sys.exit(1)
 
 if __name__ == "__main__":
