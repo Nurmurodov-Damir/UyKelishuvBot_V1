@@ -28,6 +28,16 @@ def main():
         else:
             print(f"  {var}: {value}")
     
+    # Railway database variables ni ham tekshirish
+    print("\n🗄️ Railway Database Variables:")
+    db_vars = [v for v in os.environ.keys() if 'database' in v.lower() or 'postgres' in v.lower() or 'db' in v.lower()]
+    for var in sorted(db_vars):
+        value = os.getenv(var, '')
+        if len(value) > 50:
+            print(f"  {var}: {value[:40]}...")
+        else:
+            print(f"  {var}: {value}")
+    
     # Test imports
     print("\n🔍 Testing imports...")
     try:

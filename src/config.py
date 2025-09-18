@@ -54,12 +54,12 @@ def create_settings():
         if not database_url:
             # Default SQLite for local development
             database_url = 'sqlite+aiosqlite:///uykelishuv_new.db'
-        elif database_url.startswith('postgresql://'):
-            # PostgreSQL URL ni asyncpg uchun tuzatish
-            database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://')
-        elif database_url.startswith('postgres://'):
-            # postgres:// ni postgresql+asyncpg:// ga o'zgartirish
-            database_url = database_url.replace('postgres://', 'postgresql+asyncpg://')
+        else:
+            # URL formatini tuzatish
+            if database_url.startswith('postgresql://'):
+                database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://')
+            elif database_url.startswith('postgres://'):
+                database_url = database_url.replace('postgres://', 'postgresql+asyncpg://')
         
         # Settings yaratish
         data = {

@@ -1,10 +1,11 @@
 """
 Database connection and session management
 """
+import os
+import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from src.config import settings
 from src.database.models import Base
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,12 +25,30 @@ elif settings.database_url.startswith("postgresql://"):
 else:
     database_url = settings.database_url
 
-engine = create_async_engine(
-    database_url,
-    echo=settings.debug,
-    pool_pre_ping=True,
-    pool_recycle=300
-)
+# Railway environment uchun maxsus parametrlar
+engine_kwargs = {
+    "echo": settings.debug,
+    "pool_pre_ping": True,
+    "pool_recycle": 300
+}
+
+# Railway PostgreSQL uchun maxsus parametrlar
+if database_url.startswith('postgresql+asyncpg://') and os.getenv('RAILWAY_ENVIRONMENT'):
+    engine_kwargs.update({
+        "connect_args": {
+            "server_settings": {
+                "application_name": "uykelishuv_bot",
+            },
+            "command_timeout": 60,
+            "ssl": "prefer",  # Railway SSL ishlatadi
+        },
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_recycle": 1800
+    })
+
+engine = create_async_engine(database_url, **engine_kwargs)
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(
